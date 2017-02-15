@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>JS Meetup 3D Graphics</title>
+    <meta charset="utf-8">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Open+Sans);
+      @import url(https://fonts.googleapis.com/css?family=Lora:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Lora'; }
+      .inline {
+        display: inline-block;
+      }
+      .half {
+        width: 45%;
+        padding: 10px;
+      }
+      .third {
+        width: 31%;
+        padding: 10p
+      }
+      .quarter {
+        width: 23%;
+        padding: 10px;
+      }
+      img {
+          width: 100%;
+      }
+      h1, h2, h3, h4 {
+        font-family: 'Open Sans';
+        font-weight: normal;
+        margin-bottom: 10px;
+      }
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+background-image: url(./images/intro.png)
+
+# 3D Graphics and Three.js
+### Mike Skaug
+
+---
+
+## 3D Graphics
+
+Animation, games, modelling, ...
+.inline.third[
+.left[![3D House](./images/Lone_House.jpg)]]
+
+.inline.third[
+.left[![liquid](./images/Physics-Fluid-Simulation-Blender.gif)]]
+
+.inline.third[
+.left[![Mesh](./images/Suzanne.svg)]]
+
+Sofware: [Blender](https://www.blender.org/), Maya, AutoCAD, Cinema4D, ...
+---
+
+## 3D Graphics - in a browser
+
+.inline.third[
+.left[![WebGL](./images/WebGL_Logo.svg)]]
+
+- Javascript API for 3D graphics introduced in 2011.
+- Uses GPU to render to a `<canvas>`
+- Relatively low level, shaders still written in GLSL
+
+---
+
+## 3D Graphics - in a browser
+
+.inline.third[
+.left[![WebGL](./images/WebGL_Logo.svg)]]
+
+- Javascript API for 3D graphics introduced in 2011.
+- Uses GPU to render to a `<canvas>`
+- Relatively low level, shaders still written in GLSL
+
+.inline.half[
+.left[[![Curiosity](./images/Curiosity.png)](http://eyes.nasa.gov/curiosity/)]]
+
+---
+
+.inline.third[
+.left[![WebGL](./images/WebGL_Logo.svg)]]
+### But you have to write code like this:
+
+```
+<script id="shader-vs" type="x-shader/x-vertex"></script>
+<script id="shader-fs" type="x-shader/x-fragment"></script>
+
+...
+
+function initBuffers() {
+        pyramidVertexPositionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, pyramidVertexPositionBuffer);
+...
+mat4.identity(mvMatrix);
+mat4.translate(mvMatrix, [-1.5, 0.0, -8.0]);
+mvPushMatrix();
+mat4.rotate(mvMatrix, degToRad(rPyramid), [0, 1, 0]);
+...
+```
+
+---
+
+### To get something like this:
+
+.inline[
+.left[![spinning cube](./images/cube.gif)]]
+
+---
+
+## Higher Level Frameworks
+
+.inline.third[
+.left[![ThreeJS](./images/threejs_logo.png)]]
+
+- lots of development starting in 2009
+- uses WebGl as well as other renderers
+
+.inline.third[
+.left[![BabylonJS](./images/babylon_logo.svg)]]
+
+- focused on game development
+- a little yonger, released 2013
+
+---
+
+## Lights, Camera, Objects...
+
+- 3D modelling borrows from cinematography
+
+.inline[
+.left[![3D Scene](./images/scene.png)]]
+
+---
+
+### Simple Scene
+
+Create a scene and a camera
+```js
+let THREE = require('three');
+
+let scene = new THREE.Scene();
+scene.background = new THREE.Color('rgb(80%, 80%, 80%)');
+let camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000); # or OrthographicCamera
+camera.position.z = 30;
+```
+
+Create renderer and add it to the DOM
+```js
+let renderer = new THREE.WebGLRenderer();
+renderer.setSize(500, 500);
+document.getElementById('3d-scene').appendChild(renderer.domElement);
+```
+
+Create an object and add it to the scene
+```js
+let geometry = new THREE.TorusKnotGeometry(10, 3, 100, 16);
+let material = new THREE.MeshPhongMaterial({color: 0xFF7F00});
+let torusKnot = new THREE.Mesh(geometry, material);
+scene.add(torusKnot);
+```
+---
+
+### Simple Scene
+
+Add lights
+```js
+let light = new THREE.AmbientLight(0x404040);
+scene.add(light);
+
+let directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+scene.add(directionalLight);
+```
+
+Render loop
+```js
+let render = () => {
+  requestAnimationFrame(render);
+
+  torusKnot.rotation.x += 0.01;
+  torusKnot.rotation.y += 0.01;
+
+  renderer.render(scene, camera);
+};
+
+render();
+```
+
+[Lots of other lights, geometries, materials, etc](https://threejs.org/docs/index.html)
+---
+
+### The Result
+<div id='3d-scene'></div>
+---
+
+## Pain Points
+
+### Documention!
+- API has changed significantly in recent years - many resources out of date
+- Documentation is sparse - nuts and bolts, but no concepts
+- The mystery `three/examples/js` directory
+
+### Usage
+- Limited set of geometry primitives
+- No physics
+- Difficult to integrate with other frameworks like React
+- Do you actually need 3D?
+---
+
+## ThreeJS Alternatives
+
+### [WhitestormJS](https://whsjs.io/#/)
+
+- Really new (2016) wrapper around ThreeJS
+- adds physics, ES6 style, modern tools
+
+### [Unity](https://unity3d.com/)
+
+- Big platform
+- desktop editor, deploy to mobile, web, desktop
+- Targeted towards game development and VR
+
+### [Cesium](https://cesiumjs.org/)
+
+- "An open-source JavaScript library for world-class 3D globes and maps"
+
+---
+
+## Use Case
+
+Simulating sunlight on the earth's surface
+
+.inline[
+.left[![Terrain Shade](./images/terrain-shade.png)]]
+---
+
+class: center, middle
+# Thanks!
+#### @mike_skaug
+#### mike.skaug@gmail.com
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+    <script>
+      var slideshow = remark.create();
+    </script>
+    <script src="three.min.js"></script>
+    <script>
+      let scene = new THREE.Scene();
+      scene.background = new THREE.Color('rgb(80%, 80%, 80%)');
+      let camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+      camera.position.z = 30;
+
+      let renderer = new THREE.WebGLRenderer();
+      renderer.setSize(500, 500);
+      document.getElementById('3d-scene').appendChild(renderer.domElement);
+
+      let geometry = new THREE.TorusKnotGeometry(10, 3, 100, 16);
+      let material = new THREE.MeshPhongMaterial({color: 0xFF7F00});
+      let torusKnot = new THREE.Mesh(geometry, material);
+      scene.add(torusKnot);
+
+      let light = new THREE.AmbientLight(0x404040);
+      scene.add(light);
+
+      let directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+      scene.add(directionalLight);
+
+      let render = () => {
+        requestAnimationFrame(render);
+
+        torusKnot.rotation.x += 0.01;
+        torusKnot.rotation.y += 0.01;
+
+        renderer.render(scene, camera);
+      };
+
+      render();
+    </script>
+  </body>
+</html>
